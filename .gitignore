@@ -1,0 +1,16 @@
+.env
+config.json
+saved_jobs.json
+__pycache__/
+*.pyc
+.venv_backend/
+*.db
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env*
+
+# Proyectos independientes sueltos en esta misma carpeta (no forman parte de buscador)
+/Group6-IWS/
+/MariaPicazoSanchez/
+

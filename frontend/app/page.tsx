@@ -1,0 +1,162 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { listSavedJobs, runSearchStream } from "@/lib/api";
+import { DEFAULT_FILTERS } from "@/lib/constants";
+import type { Job, MarketInsights, SearchFilters } from "@/lib/types";
+import SearchBar from "@/components/SearchBar";
+import FiltersPanel from "@/components/FiltersPanel";
+import ResultsList from "@/components/ResultsList";
+import JobDetailPanel from "@/components/JobDetailPanel";
+
+type SortOrder = "relevance" | "salary_desc" | "salary_asc";
+
+function sortJobs(jobs: Job[], order: SortOrder): Job[] {
+  if (order === "relevance") return jobs;
+  const withSalary = (j: Job) => j.salary_max ?? j.salary_min ?? 0;
+  return [...jobs].sort((a, b) =>
+    order === "salary_desc" ? withSalary(b) - withSalary(a) : withSalary(a) - withSalary(b),
+  );
+}
+
+export default function SearchPage() {
+  const [prompt, setPrompt] = useState("");
+  const [filters, setFilters] = useState<SearchFilters>({
+    country: DEFAULT_FILTERS.country,
+    jobType: DEFAULT_FILTERS.jobType,
+    salaryMin: DEFAULT_FILTERS.salaryMin,
+    currency: DEFAULT_FILTERS.currency,
+    experience: DEFAULT_FILTERS.experience,
+  });
+  const [sortOrder, setSortOrder] = useState<SortOrder>("relevance");
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [market, setMarket] = useState<MarketInsights | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [savedUrls, setSavedUrls] = useState<Set<string>>(new Set());
+
+  const stopStreamRef = useRef<(() => void) | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const refreshSavedUrls = useCallback(() => {
+    listSavedJobs()
+      .then((saved) => setSavedUrls(new Set(saved.map((s) => s.url))))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    refreshSavedUrls();
+  }, [refreshSavedUrls]);
+
+  const runSearch = useCallback(
+    (searchPrompt: string, searchFilters: SearchFilters) => {
+      if (!searchPrompt.trim()) return;
+      stopStreamRef.current?.();
+      setSearching(true);
+      setHasSearched(true);
+      setError(null);
+      setJobs([]);
+      setMarket(null);
+      setSelectedJob(null);
+
+      stopStreamRef.current = runSearchStream(searchPrompt, searchFilters, {
+        onUpdate: (partial) => setJobs(partial),
+        onDone: (finalJobs, finalMarket) => {
+          setJobs(finalJobs);
+          setMarket(finalMarket);
+          setSearching(false);
+        },
+        onError: (message) => {
+          setError(message);
+          setSearching(false);
+        },
+      });
+    },
+    [],
+  );
+
+  function handleSearch(newPrompt: string) {
+    setPrompt(newPrompt);
+    runSearch(newPrompt, filters);
+  }
+
+  function handleFiltersChange(next: SearchFilters) {
+    setFilters(next);
+    if (!prompt.trim()) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => runSearch(prompt, next), 700);
+  }
+
+  useEffect(() => {
+    return () => {
+      stopStreamRef.current?.();
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  const sortedJobs = sortJobs(jobs, sortOrder);
+
+  return (
+    <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 p-4">
+      <div className="flex flex-col gap-3">
+        <SearchBar onSearch={handleSearch} searching={searching} />
+      </div>
+
+      <div className="flex flex-1 flex-col gap-4 lg:flex-row lg:items-start">
+        <FiltersPanel filters={filters} onChange={handleFiltersChange} />
+
+        <div className="flex flex-1 flex-col gap-3 min-w-0">
+          {hasSearched && (
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-zinc-500">
+                {searching ? "Buscando…" : `${jobs.length} ofertas encontradas`}
+              </p>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+                className="rounded-lg border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+              >
+                <option value="relevance">Relevancia</option>
+                <option value="salary_desc">Salario (mayor)</option>
+                <option value="salary_asc">Salario (menor)</option>
+              </select>
+            </div>
+          )}
+
+          {error && (
+            <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+              {error}
+            </p>
+          )}
+
+          {!hasSearched && !error && (
+            <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-zinc-300 p-16 text-center text-zinc-400 dark:border-zinc-700">
+              Escribe una búsqueda en lenguaje natural para empezar.
+            </div>
+          )}
+
+          {hasSearched && !searching && jobs.length === 0 && !error && (
+            <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-zinc-300 p-16 text-center text-zinc-400 dark:border-zinc-700">
+              No se encontraron ofertas con estos filtros.
+            </div>
+          )}
+
+          <ResultsList jobs={sortedJobs} selectedJob={selectedJob} onSelect={setSelectedJob} />
+        </div>
+
+        {selectedJob && (
+          <JobDetailPanel
+            job={selectedJob}
+            country={filters.country}
+            market={market}
+            onClose={() => setSelectedJob(null)}
+            isSaved={savedUrls.has(selectedJob.url)}
+            onSaved={refreshSavedUrls}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
