@@ -8,6 +8,7 @@ import SearchBar from "@/components/SearchBar";
 import FiltersPanel from "@/components/FiltersPanel";
 import ResultsList from "@/components/ResultsList";
 import JobDetailPanel from "@/components/JobDetailPanel";
+import ChatPanel from "@/components/ChatPanel";
 
 type SortOrder = "relevance" | "salary_desc" | "salary_asc";
 
@@ -21,6 +22,8 @@ function sortJobs(jobs: Job[], order: SortOrder): Job[] {
 
 export default function SearchPage() {
   const [prompt, setPrompt] = useState("");
+  const [queryText, setQueryText] = useState("");
+  const [chatOpen, setChatOpen] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({
     country: DEFAULT_FILTERS.country,
     jobType: DEFAULT_FILTERS.jobType,
@@ -79,7 +82,13 @@ export default function SearchPage() {
 
   function handleSearch(newPrompt: string) {
     setPrompt(newPrompt);
+    setQueryText(newPrompt);
     runSearch(newPrompt, filters);
+  }
+
+  function handleSelectKeyword(keyword: string) {
+    setQueryText((prev) => (prev.trim() ? `${prev.trim()} ${keyword}` : keyword));
+    setSelectedJob(null);
   }
 
   function handleFiltersChange(next: SearchFilters) {
@@ -101,7 +110,24 @@ export default function SearchPage() {
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 p-4">
       <div className="flex flex-col gap-3">
-        <SearchBar onSearch={handleSearch} searching={searching} />
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <SearchBar value={queryText} onChange={setQueryText} onSearch={handleSearch} searching={searching} />
+          </div>
+          <button
+            onClick={() => {
+              setChatOpen((v) => !v);
+              setSelectedJob(null);
+            }}
+            className={`shrink-0 rounded-lg px-4 py-2.5 text-sm font-medium ${
+              chatOpen
+                ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
+                : "border border-zinc-300 text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
+            }`}
+          >
+            💬 Asistente
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col gap-4 lg:flex-row lg:items-start">
@@ -143,7 +169,14 @@ export default function SearchPage() {
             </div>
           )}
 
-          <ResultsList jobs={sortedJobs} selectedJob={selectedJob} onSelect={setSelectedJob} />
+          <ResultsList
+            jobs={sortedJobs}
+            selectedJob={selectedJob}
+            onSelect={(job) => {
+              setSelectedJob(job);
+              setChatOpen(false);
+            }}
+          />
         </div>
 
         {selectedJob && (
@@ -156,6 +189,8 @@ export default function SearchPage() {
             onSaved={refreshSavedUrls}
           />
         )}
+
+        {chatOpen && <ChatPanel onClose={() => setChatOpen(false)} onSelectKeyword={handleSelectKeyword} />}
       </div>
     </div>
   );

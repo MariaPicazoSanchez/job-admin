@@ -1,4 +1,5 @@
 import type {
+  ChatMessage,
   Job,
   JobAnalysis,
   JobStats,
@@ -8,7 +9,7 @@ import type {
   SourcesStatus,
 } from "./types";
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8010";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8020";
 
 async function json<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -62,6 +63,31 @@ export function deleteSavedJob(id: string): Promise<void> {
     method: "DELETE",
     credentials: "include",
   }).then(() => undefined);
+}
+
+export interface ChatStatus {
+  configured: boolean;
+}
+
+export function getChatStatus(): Promise<ChatStatus> {
+  return fetch(`${API_URL}/api/chat/status`, { credentials: "include" }).then(json<ChatStatus>);
+}
+
+export interface ChatResponse {
+  reply: string;
+  suggested_keywords: string[];
+}
+
+export function sendChatMessage(message: string, history: ChatMessage[]): Promise<ChatResponse> {
+  return fetch(`${API_URL}/api/chat`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message,
+      history: history.map((m) => ({ role: m.role, content: m.content })),
+    }),
+  }).then(json<ChatResponse>);
 }
 
 export function buildSearchUrl(prompt: string, filters: SearchFilters): string {

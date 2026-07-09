@@ -1,15 +1,13 @@
 "use client";
 
-import { useState } from "react";
-
 interface Props {
+  value: string;
+  onChange: (value: string) => void;
   onSearch: (prompt: string) => void;
   searching: boolean;
 }
 
-export default function SearchBar({ onSearch, searching }: Props) {
-  const [value, setValue] = useState("");
-
+export default function SearchBar({ value, onChange, onSearch, searching }: Props) {
   function submit() {
     if (value.trim()) onSearch(value.trim());
   }
@@ -18,7 +16,7 @@ export default function SearchBar({ onSearch, searching }: Props) {
     <div className="flex gap-2">
       <input
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && submit()}
         placeholder="Ej: Desarrollador Python senior, remoto, mínimo 60k EUR"
         className="flex-1 rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"

@@ -111,3 +111,9 @@ export interface SearchFilters {
   currency: string;
   experience: string;
 }
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+  suggestedKeywords?: string[];
+}

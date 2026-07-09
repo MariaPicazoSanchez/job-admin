@@ -1,10 +1,13 @@
 import os
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .db import Base, engine
-from .routers import analysis, config, jobs, search
+load_dotenv()
+
+from .db import Base, engine  # noqa: E402
+from .routers import analysis, chat, config, jobs, search  # noqa: E402
 
 Base.metadata.create_all(bind=engine)
 
@@ -23,6 +26,7 @@ app.include_router(search.router)
 app.include_router(analysis.router)
 app.include_router(jobs.router)
 app.include_router(config.router)
+app.include_router(chat.router)
 
 
 @app.get("/health")
