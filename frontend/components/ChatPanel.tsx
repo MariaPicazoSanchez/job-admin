@@ -19,6 +19,7 @@ export default function ChatPanel({ onClose, onSelectKeyword }: Props) {
   ]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [slowNotice, setSlowNotice] = useState(false);
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -40,7 +41,9 @@ export default function ChatPanel({ onClose, onSelectKeyword }: Props) {
     setMessages(nextMessages);
     setInput("");
     setSending(true);
+    setSlowNotice(false);
     setError(null);
+    const slowTimer = setTimeout(() => setSlowNotice(true), 6000);
     try {
       const res = await sendChatMessage(text, nextMessages);
       setMessages([
@@ -50,16 +53,18 @@ export default function ChatPanel({ onClose, onSelectKeyword }: Props) {
     } catch {
       setError("No se pudo contactar con el asistente. Inténtalo de nuevo.");
     } finally {
+      clearTimeout(slowTimer);
       setSending(false);
+      setSlowNotice(false);
     }
   }
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:w-[380px] lg:shrink-0">
       <div className="flex items-center justify-between border-b border-zinc-200 p-4 dark:border-zinc-800">
-        <h2 className="text-sm font-semibold">💬 Asistente de empleo</h2>
-        <button onClick={onClose} className="rounded-full p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800">
-          ✕
+        <h2 className="text-sm font-semibold">Asistente de empleo</h2>
+        <button onClick={onClose} className="rounded-full p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800" aria-label="Cerrar">
+          ×
         </button>
       </div>
 
@@ -97,7 +102,13 @@ export default function ChatPanel({ onClose, onSelectKeyword }: Props) {
               </div>
             </div>
           ))}
-          {sending && <p className="text-xs text-zinc-400">Escribiendo…</p>}
+          {sending && (
+            <p className="text-xs text-zinc-400">
+              {slowNotice
+                ? "El modelo gratuito está tardando más de lo normal, sigue esperando…"
+                : "Escribiendo…"}
+            </p>
+          )}
           {error && <p className="text-xs text-red-500">{error}</p>}
           <div ref={bottomRef} />
         </div>

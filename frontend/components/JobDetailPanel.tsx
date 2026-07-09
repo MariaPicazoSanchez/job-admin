@@ -61,7 +61,7 @@ export default function JobDetailPanel({ job, country, market, onClose, isSaved,
           className="rounded-full p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
           aria-label="Cerrar"
         >
-          ✕
+          ×
         </button>
       </div>
 
@@ -128,9 +128,7 @@ export default function JobDetailPanel({ job, country, market, onClose, isSaved,
               <div className="flex flex-col gap-2">
                 {analysis.signals.map((s, i) => (
                   <div key={i} className={`rounded-lg border p-2.5 ${SIGNAL_STYLES[s.kind]}`}>
-                    <p className="text-sm font-medium">
-                      {s.emoji} {s.label}
-                    </p>
+                    <p className="text-sm font-medium">{s.label}</p>
                     <p className="text-xs text-zinc-600 dark:text-zinc-400">{s.detail}</p>
                   </div>
                 ))}
@@ -218,7 +216,7 @@ export default function JobDetailPanel({ job, country, market, onClose, isSaved,
               disabled={saved || saving}
               className="flex-1 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60 dark:bg-white dark:text-zinc-900"
             >
-              {saved ? "✓ Guardada en Mis Ofertas" : saving ? "Guardando…" : "Guardar oferta"}
+              {saved ? "Guardada en Mis Ofertas" : saving ? "Guardando…" : "Guardar oferta"}
             </button>
             <a
               href={job.url}

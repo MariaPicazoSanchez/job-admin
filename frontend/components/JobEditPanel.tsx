@@ -55,8 +55,8 @@ export default function JobEditPanel({ job, onClose, onSave, onDelete }: Props) 
             {job.company} · {job.location}
           </p>
         </div>
-        <button onClick={onClose} className="rounded-full p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800">
-          ✕
+        <button onClick={onClose} className="rounded-full p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800" aria-label="Cerrar">
+          ×
         </button>
       </div>
 
@@ -199,10 +199,9 @@ export default function JobEditPanel({ job, onClose, onSave, onDelete }: Props) 
         </button>
         <button
           onClick={onDelete}
-          className="rounded-lg border border-red-300 px-3 text-sm text-red-600 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/40"
-          aria-label="Borrar"
+          className="rounded-lg border border-red-300 px-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/40"
         >
-          🗑
+          Eliminar
         </button>
       </div>
     </div>

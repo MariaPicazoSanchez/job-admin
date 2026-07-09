@@ -15,7 +15,7 @@ export default function NavBar() {
     <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
       <div className="mx-auto flex max-w-7xl items-center gap-6 px-4 py-3">
         <span className="text-lg font-semibold tracking-tight">
-          🔎 Buscador de Empleo
+          Buscador de Empleo
         </span>
         <nav className="flex gap-1">
           {LINKS.map((link) => {

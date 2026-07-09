@@ -60,7 +60,7 @@ def send_message(message: str, history: list[dict]) -> dict:
         "messages": messages,
         "response_format": {"type": "json_object"},
         "temperature": 0.4,
-        "max_tokens": 512,
+        "max_tokens": 300,
     }
 
     try:
