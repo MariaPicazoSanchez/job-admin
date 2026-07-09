@@ -52,7 +52,7 @@ _COUNTRY_LOCATION_HINTS: dict[str, set[str]] = {
 _GLOBAL_LOCATIONS = {
     "worldwide", "anywhere", "global", "remote", "remoto",
     "international", "internacional", "europe", "europa", "latam",
-    "america latina", "latin america", "",
+    "america latina", "latin america",
 }
 
 
@@ -234,8 +234,12 @@ def _apply_hard_filters(jobs: list[Job], q: ParsedQuery, country: str) -> list[J
     for job in jobs:
         if q.job_type and job.job_type and job.job_type != q.job_type:
             continue
-        if q.salary_min and job.salary_max and job.salary_max < q.salary_min:
-            continue
+        if q.salary_min and job.currency == q.currency:
+            # Techo real de la oferta: si solo indica un mínimo (sin máximo),
+            # ese mínimo es la única cifra que tenemos para comparar.
+            ceiling = job.salary_max or job.salary_min
+            if ceiling and ceiling < q.salary_min:
+                continue
         if country and country != "Cualquier país":
             if not _location_matches_country(job.location, country, job.job_type):
                 continue
@@ -245,6 +249,10 @@ def _apply_hard_filters(jobs: list[Job], q: ParsedQuery, country: str) -> list[J
 
 def _location_matches_country(location: str, country: str, job_type: str) -> bool:
     loc = location.lower().strip()
+    if not loc:
+        # Sin ubicación indicada: solo lo aceptamos si el puesto es remoto,
+        # ya que no hay forma de saber si coincide con el país pedido.
+        return job_type == "remote"
     if job_type == "remote" and any(g in loc for g in _GLOBAL_LOCATIONS):
         return True
     hints = _COUNTRY_LOCATION_HINTS.get(country, set())
