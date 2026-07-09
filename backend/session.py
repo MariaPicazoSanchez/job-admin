@@ -1,9 +1,17 @@
+import os
 import uuid
 
 from fastapi import Request, Response
 
 COOKIE_NAME = "buscador_session"
 MAX_AGE = 60 * 60 * 24 * 365  # 1 año
+
+# En local, frontend y backend comparten "localhost" (SameSite=Lax basta).
+# En producción están en dominios distintos (vercel.app / onrender.com), así
+# que la cookie de sesión necesita SameSite=None + Secure para viajar entre
+# ellos en peticiones fetch con credentials: "include".
+COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE", "lax")
+COOKIE_SECURE = os.getenv("COOKIE_SECURE", "false").lower() == "true"
 
 
 def get_session_id(request: Request, response: Response) -> str:
@@ -14,7 +22,8 @@ def get_session_id(request: Request, response: Response) -> str:
             COOKIE_NAME,
             sid,
             httponly=True,
-            samesite="lax",
+            samesite=COOKIE_SAMESITE,
+            secure=COOKIE_SECURE,
             max_age=MAX_AGE,
             path="/",
         )
