@@ -55,7 +55,7 @@ export default function ChatPanel({ onClose, onSelectKeyword }: Props) {
   }
 
   return (
-    <div className="flex h-full w-full flex-col border-l border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:w-[380px] lg:shrink-0">
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 lg:w-[380px] lg:shrink-0">
       <div className="flex items-center justify-between border-b border-zinc-200 p-4 dark:border-zinc-800">
         <h2 className="text-sm font-semibold">💬 Asistente de empleo</h2>
         <button onClick={onClose} className="rounded-full p-1 text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800">

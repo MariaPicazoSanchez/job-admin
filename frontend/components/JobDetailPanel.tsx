@@ -48,7 +48,7 @@ export default function JobDetailPanel({ job, country, market, onClose, isSaved,
   }
 
   return (
-    <div className="flex h-full w-full flex-col overflow-y-auto border-l border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900 lg:w-[460px] lg:shrink-0">
+    <div className="flex h-full w-full flex-col overflow-y-auto rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900 lg:w-[460px] lg:shrink-0">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold leading-snug">{job.title}</h2>
