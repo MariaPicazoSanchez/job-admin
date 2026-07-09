@@ -2,20 +2,14 @@
 Fuente: Arbeitnow API — gratuita, sin clave, trabajos en Europa y remoto.
 https://arbeitnow.com/api
 """
+from datetime import datetime, timezone
+
 import requests
 from .models import Job
 from .parser import ParsedQuery
 
 API_URL = "https://arbeitnow.com/api/job-board-api"
 TIMEOUT = 10
-
-COUNTRY_HINTS = {
-    "España":        ["spain", "españa", "madrid", "barcelona", "valencia", "es"],
-    "Alemania":      ["germany", "deutschland", "berlin", "munich", "hamburg", "de"],
-    "Reino Unido":   ["uk", "united kingdom", "london", "manchester", "gb"],
-    "Francia":       ["france", "paris", "fr"],
-    "Países Bajos":  ["netherlands", "amsterdam", "nl"],
-}
 
 
 def search(query: ParsedQuery, country: str = "Cualquier país") -> list[Job]:
@@ -47,9 +41,8 @@ def search(query: ParsedQuery, country: str = "Cualquier país") -> list[Job]:
         job_type = "remote" if remote else _detect_type(item.get("title", ""))
         tags = [{"remote": "Remoto", "hybrid": "Híbrido", "onsite": "Presencial"}.get(job_type, "")]
 
-        if country != "Cualquier país" and not _location_ok(location, country, remote):
-            continue
-
+        # El filtrado por país se aplica de forma centralizada en
+        # aggregator._apply_hard_filters, a partir de la ubicación real.
         jobs.append(Job(
             title=item.get("title", ""),
             company=item.get("company_name", ""),
@@ -59,17 +52,19 @@ def search(query: ParsedQuery, country: str = "Cualquier país") -> list[Job]:
             job_type=job_type,
             description=item.get("description", "")[:300],
             tags=[t for t in tags if t],
+            posted=_format_created_at(item.get("created_at")),
         ))
 
     return jobs
 
 
-def _location_ok(location: str, country: str, remote: bool) -> bool:
-    if remote:
-        return True
-    loc = location.lower()
-    hints = COUNTRY_HINTS.get(country, [country.lower()])
-    return any(h in loc for h in hints)
+def _format_created_at(created_at) -> str:
+    if not created_at:
+        return ""
+    try:
+        return datetime.fromtimestamp(int(created_at), tz=timezone.utc).isoformat()
+    except (TypeError, ValueError, OSError):
+        return ""
 
 
 def _detect_type(text: str) -> str:

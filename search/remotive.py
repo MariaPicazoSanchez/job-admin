@@ -115,6 +115,7 @@ def _fetch_category(category: str) -> list[Job]:
             job_type="remote",
             description=_strip_html(item.get("description", ""))[:500],
             tags=["Remoto"],
+            posted=item.get("publication_date", ""),
         ))
     return jobs
 

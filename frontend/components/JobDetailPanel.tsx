@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { analyzeJob, saveJob } from "@/lib/api";
+import { formatPostedDate } from "@/lib/format";
 import type { Job, JobAnalysis, MarketInsights } from "@/lib/types";
 
 const SIGNAL_STYLES: Record<string, string> = {
@@ -55,6 +56,9 @@ export default function JobDetailPanel({ job, country, market, onClose, isSaved,
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             {job.company} · {job.location}
           </p>
+          {formatPostedDate(job.posted) && (
+            <p className="text-xs text-zinc-400">{formatPostedDate(job.posted)}</p>
+          )}
         </div>
         <button
           onClick={onClose}

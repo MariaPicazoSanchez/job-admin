@@ -1,5 +1,6 @@
 "use client";
 
+import { formatPostedDate } from "@/lib/format";
 import type { Job } from "@/lib/types";
 
 function salaryDisplay(job: Job): string {
@@ -34,6 +35,7 @@ interface Props {
 export default function JobCard({ job, selected, onClick }: Props) {
   const seniority = SENIORITY_LABEL[job.seniority_level] ?? "";
   const modalidad = MODALIDAD_LABEL[job.job_type] ?? "";
+  const posted = formatPostedDate(job.posted);
 
   return (
     <button
@@ -66,6 +68,7 @@ export default function JobCard({ job, selected, onClick }: Props) {
           </span>
         )}
       </div>
+      {posted && <p className="mt-2 text-xs text-zinc-400">{posted}</p>}
     </button>
   );
 }
