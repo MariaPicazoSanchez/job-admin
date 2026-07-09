@@ -54,13 +54,16 @@ def rerank(jobs: list[Job], q: ParsedQuery) -> list[Job]:
     if not jobs:
         return []
 
+    # Filtro duro por nivel de experiencia: si el usuario pide un nivel
+    # concreto, solo pasan los niveles de seniority compatibles (según la
+    # matriz de abajo), no basta con que el score total no sea muy negativo
+    # (los bonus por keywords/salario podían enmascarar un mismatch de nivel).
+    if q.experience:
+        compat = _SENIORITY_COMPATIBILITY.get(q.experience, {})
+        jobs = [j for j in jobs if compat.get(j.seniority_level, 0) >= 0]
+
     scored = [(score(job, q), job) for job in jobs]
     scored.sort(key=lambda x: x[0], reverse=True)
-
-    # Filtro duro: descartar si el score de seniority es muy negativo
-    # (solo cuando el usuario especificó un nivel de seniority)
-    if q.experience:
-        scored = [(s, j) for s, j in scored if s > -50]
 
     return [j for _, j in scored]
 

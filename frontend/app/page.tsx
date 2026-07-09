@@ -20,6 +20,18 @@ function sortJobs(jobs: Job[], order: SortOrder): Job[] {
   );
 }
 
+const jobKey = (job: Job) => `${job.source}-${job.url}`;
+
+// Mantiene la posición de las ofertas ya mostradas (para no reordenar mientras
+// la persona las está leyendo) y añade las nuevas al final de la lista.
+function mergeKeepOrder(prev: Job[], incoming: Job[]): Job[] {
+  const incomingByKey = new Map(incoming.map((j) => [jobKey(j), j]));
+  const prevKeys = new Set(prev.map(jobKey));
+  const kept = prev.map((j) => incomingByKey.get(jobKey(j)) ?? j);
+  const added = incoming.filter((j) => !prevKeys.has(jobKey(j)));
+  return [...kept, ...added];
+}
+
 export default function SearchPage() {
   const [prompt, setPrompt] = useState("");
   const [queryText, setQueryText] = useState("");
@@ -65,9 +77,9 @@ export default function SearchPage() {
       setSelectedJob(null);
 
       stopStreamRef.current = runSearchStream(searchPrompt, searchFilters, {
-        onUpdate: (partial) => setJobs(partial),
+        onUpdate: (partial) => setJobs((prev) => mergeKeepOrder(prev, partial)),
         onDone: (finalJobs, finalMarket) => {
-          setJobs(finalJobs);
+          setJobs((prev) => mergeKeepOrder(prev, finalJobs));
           setMarket(finalMarket);
           setSearching(false);
         },
